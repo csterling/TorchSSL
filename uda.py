@@ -12,6 +12,7 @@ import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
+from datasets.custom_dataset import CustomDataset2
 from utils import net_builder, get_logger, count_parameters, over_write_args_from_file
 from train_utils import TBLog, get_optimizer, get_cosine_schedule_with_warmup
 from models.uda.uda import Uda
@@ -180,13 +181,21 @@ def main_worker(gpu, ngpus_per_node, args):
         torch.distributed.barrier()
  
     # Construct Dataset & DataLoader
-    train_dset = SSL_Dataset(args, alg='uda', name=args.dataset, train=True,
-                             num_classes=args.num_classes, data_dir=args.data_dir)
-    lb_dset, ulb_dset = train_dset.get_ssl_dset(args.num_labels)
 
-    _eval_dset = SSL_Dataset(args, alg='uda', name=args.dataset, train=False,
-                             num_classes=args.num_classes, data_dir=args.data_dir)
-    eval_dset = _eval_dset.get_dset()
+    if not args.dataset.lower().startswith("custom_"):
+        train_dset = SSL_Dataset(args, alg='uda', name=args.dataset, train=True,
+                                 num_classes=args.num_classes, data_dir=args.data_dir)
+        lb_dset, ulb_dset = train_dset.get_ssl_dset(args.num_labels)
+
+        _eval_dset = SSL_Dataset(args, alg='uda', name=args.dataset, train=False,
+                                 num_classes=args.num_classes, data_dir=args.data_dir)
+        eval_dset = _eval_dset.get_dset()
+    else:
+        name, mean, std = args.dataset[7:].split("_", 2)
+        lb_dset = CustomDataset2(args.data_dir, name, True, False, float(mean), float(std))
+        ulb_dset = CustomDataset2(args.data_dir, name, True, True, float(mean), float(std))
+        eval_dset = CustomDataset2(args.data_dir, name, False, False, float(mean), float(std))
+
     if args.rank == 0:
         torch.distributed.barrier()
  
