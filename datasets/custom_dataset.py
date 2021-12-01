@@ -88,6 +88,9 @@ class CustomDataset(ImageFolder):
 
 class CustomDataset2(ImageFolder):
     def __init__(self, root, name, train, ulb, mean, std):
+        self.name = name
+        self.train = train
+        self.ulb = ulb
         super().__init__(
             root,
             transform=transforms.Compose([
@@ -102,9 +105,6 @@ class CustomDataset2(ImageFolder):
                 transforms.Normalize(mean, std)
             ])
         )
-        self.name = name
-        self.train = train
-        self.ulb = ulb
         classes, class_to_idx = self.find_classes(self.root)
         samples = self.make_dataset(self.root, class_to_idx)
         if len(samples) == 0:
@@ -122,7 +122,10 @@ class CustomDataset2(ImageFolder):
 
     def find_classes(self, directory: str) -> Tuple[List[str], Dict[str, int]]:
         with open(os.path.join(self.root, f"{self.name}.labels"), 'r') as labels_file:
-            labels = labels_file.readlines()
+            labels = [
+                    label.strip()
+                    for label in labels_file.readlines()
+                    ]
             label_indices = {
                 label: index
                 for index, label in enumerate(labels)
@@ -153,7 +156,7 @@ class CustomDataset2(ImageFolder):
 
         return [
             (
-                os.path.join(self.root, dataset_file),
+                os.path.join(self.root, dataset_file.strip()),
                 class_to_idx[os.path.basename(os.path.dirname(dataset_file))]
             )
             for dataset_file in dataset_files
