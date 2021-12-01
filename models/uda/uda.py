@@ -1,3 +1,5 @@
+import math
+
 import torch
 import numpy as np
 import torch.nn as nn
@@ -7,6 +9,9 @@ from torch.cuda.amp import autocast, GradScaler
 from collections import Counter
 import os
 import contextlib
+
+from diffeo.diffeo_imgs import diffeo_imgs
+from diffeo.relative_distance import relative_distance
 from train_utils import AverageMeter
 
 from .uda_utils import consistency_loss, TSA, Get_Scalar, torch_device_one
@@ -258,11 +263,38 @@ class Uda:
         F1 = f1_score(y_true, y_pred, average='macro')
         AUC = roc_auc_score(y_true, y_logits, multi_class='ovo')
         cf_mat = confusion_matrix(y_true, y_pred, normalize='true')
+
+        # Diffeo
+        imgs = torch.vstack([x for _, x, _ in eval_loader]).to('cpu')
+
+        data = diffeo_imgs(
+            imgs,
+            cuts=(3,),
+            nT=1,
+            delta=1.
+        )
+
+        d, g = relative_distance(
+            self.model,
+            imgs.to(args.gpu).float(),
+            data['cuts'][0]['diffeo'].to(args.gpu).float(),
+            data['cuts'][0]['normal'].to(args.gpu).float(),
+        )
+
+        e = 1.0 - top1
+        r = d / g
+
         self.print_fn('confusion matrix:\n' + np.array_str(cf_mat))
         self.ema.restore()
         self.model.train()
         return {'eval/loss': total_loss / total_num, 'eval/top-1-acc': top1, 'eval/top-5-acc': top5,
-                'eval/precision': precision, 'eval/recall': recall, 'eval/F1': F1, 'eval/AUC': AUC}
+                'eval/precision': precision, 'eval/recall': recall, 'eval/F1': F1, 'eval/AUC': AUC,
+                'eval/error': e,
+                'eval/D': d,
+                'eval/G': g,
+                'eval/R': r,
+                'eval/R_coeff': e / math.sqrt(r)
+        }
 
     def save_model(self, save_name, save_path):
         if self.it < 1000000:
