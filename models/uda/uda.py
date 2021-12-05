@@ -282,7 +282,10 @@ class Uda:
         )
 
         e = 1.0 - top1
-        r = d / g
+        try:
+            r = d / g
+        except ZeroDivisionError:
+            r = 0.0
 
         self.print_fn('confusion matrix:\n' + np.array_str(cf_mat))
         self.ema.restore()
