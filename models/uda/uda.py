@@ -277,8 +277,8 @@ class Uda:
         d, g = relative_distance(
             self.model,
             imgs.to(args.gpu).float(),
-            data['cuts'][0]['diffeo'].to(args.gpu).float(),
-            data['cuts'][0]['normal'].to(args.gpu).float(),
+            data['cuts'][0]['diffeo'][0].to(args.gpu).float(),
+            data['cuts'][0]['normal'][0].to(args.gpu).float(),
         )
 
         e = 1.0 - top1
