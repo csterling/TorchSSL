@@ -15,10 +15,28 @@ def relative_distance(f, os, ds, qs, deno=True):
     qs: [batch, y, x, rgb]   diffeo images
     """
     with torch.no_grad():
-        f0 = f(os).detach().reshape(len(os), -1)  # [batch, ...]
+        f0 = get_predictions(f, os).reshape(len(os), -1)  # [batch, ...]
         deno = torch.cdist(f0, f0).pow(2).median().item() + 1e-10 if deno else 1
-        fd = f(ds).detach().reshape(len(os), -1)  # [batch, ...]
-        fq = f(qs).detach().reshape(len(os), -1)  # [batch, ...]
+        fd = get_predictions(f, ds).reshape(len(os), -1)  # [batch, ...]
+        fq = get_predictions(f, qs).reshape(len(os), -1)  # [batch, ...]
         outd = (fd - f0).pow(2).median(0).values.sum().item() / deno
         outq = (fq - f0).pow(2).median(0).values.sum().item() / deno
         return outd, outq
+
+
+def get_predictions(f, imgs):
+    indv = False
+
+    try:
+        f0 = f(imgs).detach()
+    except RuntimeError:
+        indv = True
+
+    if indv:
+        f_os = []
+        for o in imgs:
+            f_o = f(o.reshape(1, *o.shape)).detach()
+            f_os += [f_o]
+        f0 = torch.vstack(f_os)
+
+    return f0
