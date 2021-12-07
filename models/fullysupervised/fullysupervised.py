@@ -6,6 +6,7 @@ from torch.cuda.amp import autocast, GradScaler
 import os
 import contextlib
 
+from diffeo.eval import eval_diffeo
 from train_utils import ce_loss, wd_loss, EMA, Bn_Controller
 
 from sklearn.metrics import *
@@ -206,7 +207,7 @@ class FullySupervised:
         self.print_fn('confusion matrix:\n' + np.array_str(cf_mat))
         self.ema.restore()
         self.model.train()
-        return {'eval/loss': total_loss / total_num, 'eval/top-1-acc': top1, 'eval/top-5-acc': top5}
+        return {'eval/loss': total_loss / total_num, 'eval/top-1-acc': top1, 'eval/top-5-acc': top5}.update(eval_diffeo(self.model, eval_loader, args.gpu, top1))
 
     def save_model(self, save_name, save_path):
         if self.it < 1000000:
