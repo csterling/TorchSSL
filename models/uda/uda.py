@@ -268,8 +268,9 @@ class Uda:
         self.model.train()
         return {
             'eval/loss': total_loss / total_num, 'eval/top-1-acc': top1, 'eval/top-5-acc': top5,
-            'eval/precision': precision, 'eval/recall': recall, 'eval/F1': F1, 'eval/AUC': AUC
-        }.update(eval_diffeo(self.model, eval_loader, args.gpu, top1))
+            'eval/precision': precision, 'eval/recall': recall, 'eval/F1': F1, 'eval/AUC': AUC,
+            **eval_diffeo(self.model, eval_loader, args.gpu, top1)
+        }
 
     def save_model(self, save_name, save_path):
         if self.it < 1000000:
