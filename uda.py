@@ -341,6 +341,8 @@ if __name__ == "__main__":
                              'N processes per node, which has N GPUs. This is the '
                              'fastest way to use PyTorch for either single node or '
                              'multi node data parallel training')
+    parser.add_argument('--only-gpus', nargs='+', type=int,
+                        help='GPU ids to use.')
     # config file
     parser.add_argument('--c', type=str, default='')
 
