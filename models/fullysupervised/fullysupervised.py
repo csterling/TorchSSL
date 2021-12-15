@@ -208,8 +208,7 @@ class FullySupervised:
         self.ema.restore()
         self.model.train()
         return {
-            'eval/loss': total_loss / total_num, 'eval/top-1-acc': top1, 'eval/top-5-acc': top5,
-            **eval_diffeo(self.model, eval_loader, args.gpu, top1)
+            'eval/loss': total_loss / total_num, 'eval/top-1-acc': top1, 'eval/top-5-acc': top5
         }
 
     def save_model(self, save_name, save_path):
