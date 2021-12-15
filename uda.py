@@ -192,7 +192,7 @@ def main_worker(gpu, ngpus_per_node, args):
         eval_dset = _eval_dset.get_dset()
     else:
         name, mean, std = args.dataset[7:].split("_", 2)
-        lb_dset = CustomDataset2(args.data_dir, name, True, False, float(mean), float(std))
+        lb_dset = CustomDataset2(args.data_dir, name, True, False, float(mean), float(std), args.num_labels)
         ulb_dset = CustomDataset2(args.data_dir, name, True, True, float(mean), float(std))
         eval_dset = CustomDataset2(args.data_dir, name, False, False, float(mean), float(std))
 

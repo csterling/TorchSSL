@@ -87,7 +87,7 @@ class CustomDataset(ImageFolder):
 
 
 class CustomDataset2(ImageFolder):
-    def __init__(self, root, name, train, ulb, mean, std):
+    def __init__(self, root, name, train, ulb, mean, std, num_labelled_instances=-1):
         self.name = name
         self.train = train
         self.ulb = ulb
@@ -106,6 +106,11 @@ class CustomDataset2(ImageFolder):
             ])
         )
         classes, class_to_idx = self.find_classes(self.root)
+        self.num_labelled_instances_per_class = (
+                num_labelled_instances // len(classes)
+                if num_labelled_instances != -1
+                else -1
+        )
         samples = self.make_dataset(self.root, class_to_idx)
         if len(samples) == 0:
             msg = "Found 0 files in subfolders of: {}\n".format(self.root)
@@ -154,10 +159,49 @@ class CustomDataset2(ImageFolder):
         with open(os.path.join(self.root, dataset_list_filename), 'r') as dataset_list_file:
             dataset_files = dataset_list_file.readlines()
 
-        return [
-            (
-                os.path.join(self.root, dataset_file.strip()),
-                class_to_idx[os.path.basename(os.path.dirname(dataset_file))]
-            )
-            for dataset_file in dataset_files
-        ]
+        # Return the entire dataset if we're not limiting the number of labelled instances
+        if self.num_labelled_instances_per_class == -1:
+            return [
+                (
+                    os.path.join(self.root, dataset_file.strip()),
+                    class_to_idx[os.path.basename(os.path.dirname(dataset_file))]
+                )
+                for dataset_file in dataset_files
+            ]
+
+        # Otherwise filter out the first X instances of each label
+        count_of_each_label_left_to_find = {
+            label: self.num_labelled_instances_per_class
+            for label in class_to_idx.keys()
+        }
+        result = []
+        for dataset_file in dataset_files:
+            # Parse the label from the filename
+            label = os.path.basename(os.path.dirname(dataset_file))
+
+            # If we don't need anymore instances from this label, skip it
+            if label not in count_of_each_label_left_to_find:
+                continue
+
+            # Add the instance to the result set
+            result.append((os.path.join(self.root, dataset_file.strip()), class_to_idx[label]))
+
+            # Work out how many more instances we need to find for this label after this one
+            count_of_this_label_left_to_find = count_of_each_label_left_to_find[label] - 1
+
+            # Remove the label from the counters once we've found enough instances for it
+            if count_of_this_label_left_to_find == 0:
+                del count_of_each_label_left_to_find[label]
+
+                # If this was the last label to fulfill, return the found instances
+                if len(count_of_each_label_left_to_find) == 0:
+                    return result
+            else:
+                count_of_each_label_left_to_find[label] = count_of_this_label_left_to_find
+
+        # If we reach here, one or more label could not find enough instances
+        raise Exception(f"Could not find enough instances for some labels: {count_of_each_label_left_to_find}")
+
+
+
+
