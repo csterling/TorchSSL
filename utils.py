@@ -1,3 +1,4 @@
+import functools
 import os
 import time
 from torch.utils.tensorboard import SummaryWriter
@@ -36,7 +37,7 @@ def test_setattr_cls_from_kwargs():
         print(f"{key}:\t {getattr(test_cls, key)}")
 
 
-def net_builder(net_name, from_name: bool, net_conf=None, is_remix=False):
+def net_builder(net_name, from_name: bool, net_conf=None, is_remix=False, pretrained=False):
     """
     return **class** of backbone network (not instance).
     Args
@@ -55,7 +56,7 @@ def net_builder(net_name, from_name: bool, net_conf=None, is_remix=False):
                                expected: {model_name_list}  \
                                received: {net_name}")
         else:
-            return models.__dict__[net_name]
+            return functools.partial(models.__dict__[net_name], pretrained=pretrained)
 
     else:
         if net_name == 'WideResNet':

@@ -122,6 +122,7 @@ def main_worker(gpu, ngpus_per_node, args):
                                     'dropRate': args.dropout,
                                     'use_embed': False,
                                     'is_remix': False},
+                                   pretrained=args.pretrained
                                    )
 
     model = FullySupervised(_net_builder,
@@ -293,6 +294,7 @@ if __name__ == "__main__":
     '''
     parser.add_argument('--net', type=str, default='WideResNet')
     parser.add_argument('--net_from_name', type=str2bool, default=False)
+    parser.add_argument('--pretrained', type=str2bool, default=False)
     parser.add_argument('--depth', type=int, default=28)
     parser.add_argument('--widen_factor', type=int, default=2)
     parser.add_argument('--leaky_slope', type=float, default=0.1)
