@@ -164,6 +164,10 @@ class FullySupervised:
                 if not args.multiprocessing_distributed or \
                         (args.multiprocessing_distributed and args.rank % ngpus_per_node == 0):
 
+                    epoch = self.it // self.num_eval_iter
+                    if epoch in args.retain_epochs:
+                        self.save_model(f"model_at_epoch_{epoch}.pth", save_path, False)
+
                     if self.it == best_it:
                         self.save_model('model_best.pth', save_path)
 
@@ -211,8 +215,8 @@ class FullySupervised:
             'eval/loss': total_loss / total_num, 'eval/top-1-acc': top1, 'eval/top-5-acc': top5
         }
 
-    def save_model(self, save_name, save_path):
-        if self.it < 1000000:
+    def save_model(self, save_name, save_path, dont_save_before_1000000=True):
+        if self.it < 1000000 and dont_save_before_1000000:
             return
         save_filename = os.path.join(save_path, save_name)
         # copy EMA parameters to ema_model for saving with model as temp

@@ -344,6 +344,8 @@ if __name__ == "__main__":
                              'multi node data parallel training')
     parser.add_argument('--only-gpus', nargs='+', type=int,
                         help='GPU ids to use.')
+    parser.add_argument('--retain-epochs', nargs='+', type=int,
+                        help='Epochs at which to save models.')
     # config file
     parser.add_argument('--c', type=str, default='')
 

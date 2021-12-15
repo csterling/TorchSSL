@@ -232,6 +232,10 @@ class FlexMatch:
                 if not args.multiprocessing_distributed or \
                         (args.multiprocessing_distributed and args.rank % ngpus_per_node == 0):
 
+                    epoch = self.it // self.num_eval_iter
+                    if epoch in args.retain_epochs:
+                        self.save_model(f"model_at_epoch_{epoch}.pth", save_path)
+
                     if self.it == best_it:
                         self.save_model('model_best.pth', save_path)
                     if not self.tb_log is None:
