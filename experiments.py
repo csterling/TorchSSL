@@ -29,7 +29,7 @@ def run_experiment(dataset, dataset_size, num_classes, net, ssl_method, pretrain
         sys_main(args)
     except Exception as e:
         with open(f"{save_name}.err", "w") as file:
-            traceback.print_tb(e, file)
+            file.writelines(traceback.format_tb(e))
 
 
 if __name__ == '__main__':
