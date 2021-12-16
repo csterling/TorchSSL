@@ -55,7 +55,7 @@ def main(args):
 
     # distributed: true if manually selected or if world_size > 1
     args.distributed = args.world_size > 1 or args.multiprocessing_distributed
-    ngpus_per_node = torch.cuda.device_count()  # number of gpus of each node
+    ngpus_per_node = torch.cuda.device_count() if args.only_gpus is None or len(args.only_gpus) == 0 else len(args.only_gpus)
 
     if args.multiprocessing_distributed:
         # now, args.world_size means num of total processes in all nodes
@@ -73,7 +73,11 @@ def main_worker(gpu, ngpus_per_node, args):
     '''
 
     global best_acc1
-    args.gpu = gpu
+    if args.multiprocessing_distributed:
+        if args.only_gpus is not None and len(args.only_gpus) > 0:
+            args.gpu = args.only_gpus[gpu]
+        else:
+            args.gpu = gpu
 
     # random seed has to be set for the syncronization of labeled data sampling in each process.
     assert args.seed is not None
