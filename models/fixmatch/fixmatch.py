@@ -224,8 +224,6 @@ class FixMatch:
             self.it += 1
             del tb_dict
             start_batch.record()
-            if self.it > 0.8 * args.num_train_iter:
-                self.num_eval_iter = 1000
 
         eval_dict = self.evaluate(args=args)
         eval_dict.update({'eval/best_acc': best_eval_acc, 'eval/best_it': best_it})
