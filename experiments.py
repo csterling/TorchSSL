@@ -8,7 +8,7 @@ def run_experiment(dataset, dataset_size, num_classes, net, ssl_method, pretrain
 
     save_name = f"{dataset}_{net}_{ssl_method}_{pretraining}_{amount_labelled}"
 
-    epoch_size_in_iterations = amount_labelled // 64 + 1
+    epoch_size_in_iterations = dataset_size // 512 + 1
 
     # Args are supplied args + common settings from config + custom
     args = list(sys.argv[1:])
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     DATASETS_SETTING = {  # (dataset_size, num_classes, (...amount_labelled))
         "cifar10": (50000, 10, (40, 250, 4000)),
         "cifar100": (50000, 100, (400, 2500, 10000)),
-        "stl10": (5000, 10, (40, 250, 1000)),
+        "stl10": (105000, 10, (40, 250, 1000)),
         "svhn": (73257 + 531131, 10, (40, 250, 1000)),
         "custom_birds_0.0_1.0": (10061, 200, (1000, 3000, 8000))
     }
