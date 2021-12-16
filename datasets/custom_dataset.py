@@ -91,6 +91,12 @@ class CustomDataset2(ImageFolder):
         self.name = name
         self.train = train
         self.ulb = ulb
+        classes, class_to_idx = self.find_classes(root)
+        self.num_labelled_instances_per_class = (
+            num_labelled_instances // len(classes)
+            if num_labelled_instances != -1
+            else -1
+        )
         super().__init__(
             root,
             transform=transforms.Compose([
@@ -104,12 +110,6 @@ class CustomDataset2(ImageFolder):
                 transforms.ToTensor(),
                 transforms.Normalize(mean, std)
             ])
-        )
-        classes, class_to_idx = self.find_classes(self.root)
-        self.num_labelled_instances_per_class = (
-                num_labelled_instances // len(classes)
-                if num_labelled_instances != -1
-                else -1
         )
         samples = self.make_dataset(self.root, class_to_idx)
         if len(samples) == 0:
@@ -126,7 +126,7 @@ class CustomDataset2(ImageFolder):
             self.strong_transform.transforms.insert(0, RandAugment(3, 5))
 
     def find_classes(self, directory: str) -> Tuple[List[str], Dict[str, int]]:
-        with open(os.path.join(self.root, f"{self.name}.labels"), 'r') as labels_file:
+        with open(os.path.join(directory, f"{self.name}.labels"), 'r') as labels_file:
             labels = [
                     label.strip()
                     for label in labels_file.readlines()
