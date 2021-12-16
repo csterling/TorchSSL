@@ -1,4 +1,5 @@
 # import needed library
+import argparse
 import os
 import logging
 import random
@@ -253,9 +254,7 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-if __name__ == "__main__":
-    import argparse
-
+def sys_main(args=None):
     parser = argparse.ArgumentParser(description='')
 
     '''
@@ -349,6 +348,10 @@ if __name__ == "__main__":
     # config file
     parser.add_argument('--c', type=str, default='')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     over_write_args_from_file(args, args.c)
     main(args)
+
+
+if __name__ == "__main__":
+    sys_main()
