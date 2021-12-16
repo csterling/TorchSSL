@@ -11,7 +11,7 @@ def run_experiment(dataset, dataset_size, num_classes, net, ssl_method, pretrain
     epoch_size_in_iterations = amount_labelled // 64 + 1
 
     # Args are supplied args + common settings from config + custom
-    args = list(sys.argv)
+    args = list(sys.argv[1:])
     args += [
         "--c", f"config/experiments/{ssl_method}.yaml",
         "--save_name", save_name,
