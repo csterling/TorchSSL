@@ -37,6 +37,37 @@ def test_setattr_cls_from_kwargs():
         print(f"{key}:\t {getattr(test_cls, key)}")
 
 
+def _pretrained_net_builder(model, pretrained):
+    if not pretrained:
+        return functools.partial(model, pretrained=pretrained)
+
+    @functools.wraps(model)
+    def _impl(*args, **kwargs):
+        if "num_classes" not in kwargs:
+            return model(*args, pretrained=True, **kwargs)
+
+        from torchvision.models.efficientnet import EfficientNet
+        from torch import nn
+
+        num_classes = kwargs.pop("num_classes")
+
+        inst = model(*args, pretrained=True, **kwargs)
+
+        if not isinstance(inst, EfficientNet):
+            raise Exception("pretraining is only currently available for efficientnet models")
+
+        current_classifier = inst.classifier[1]
+
+        if not isinstance(current_classifier, nn.Linear):
+            raise Exception("Classification layer was not linear as expected")
+
+        inst.classifier[1] = nn.Linear(current_classifier.in_features, num_classes)
+
+        return inst
+
+    return _impl
+
+
 def net_builder(net_name, from_name: bool, net_conf=None, is_remix=False, pretrained=False):
     """
     return **class** of backbone network (not instance).
@@ -56,7 +87,7 @@ def net_builder(net_name, from_name: bool, net_conf=None, is_remix=False, pretra
                                expected: {model_name_list}  \
                                received: {net_name}")
         else:
-            return functools.partial(models.__dict__[net_name], pretrained=pretrained)
+            return _pretrained_net_builder(models.__dict__[net_name], pretrained)
 
     else:
         if net_name == 'WideResNet':
