@@ -56,49 +56,42 @@ def main(args=None):
     parser.add_argument(
         dest='dataset',
         metavar='DATASET',
-        required=True,
         choices=("cifar10", "cifar100", "stl10", "svhn", "custom_birds_0.0_1.0"),
         help='The dataset'
     )
     parser.add_argument(
         dest='num_classes',
         metavar='NUM-CLASSES',
-        required=True,
         type=int,
         help='The number of classes in the dataset'
     )
     parser.add_argument(
         dest='net',
         metavar='NETWORK',
-        required=True,
         choices=("efficientnet_b0", "efficientnet_b2", "efficientnet_b4", "efficientnet_b6"),
         help='The network'
     )
     parser.add_argument(
         dest='ssl_method',
         metavar='SSL-METHOD',
-        required=True,
         choices=("uda", "fixmatch", "flexmatch", "fullysupervised"),
         help='The SSL method'
     )
     parser.add_argument(
         dest='pretraining',
         metavar='PRETRAINING',
-        required=True,
         type=bool,
         help='Whether to use pretraining'
     )
     parser.add_argument(
         dest='amount_labelled',
         metavar='AMOUNT-LABELLED',
-        required=True,
         type=int,
         help='Amount of labelled data'
     )
     parser.add_argument(
         dest='epoch',
         metavar='EPOCH',
-        required=True,
         type=int,
         choices=(50, 100, 500, 1000),
         help='The epoch to evaluate'
@@ -106,7 +99,6 @@ def main(args=None):
     parser.add_argument(
         dest='gpu',
         metavar='GPU',
-        required=True,
         type=int,
         help='The GPU to use'
     )
