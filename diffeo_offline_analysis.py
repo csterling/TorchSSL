@@ -33,7 +33,7 @@ def diffeo_offline_analysis(
         "--num_labels", str(amount_labelled),
         "--num_classes", str(num_classes),
         "--multiprocessing-distributed", "false",
-        "--gpu", gpu
+        "--gpu", str(gpu)
     ]
 
     args = parse_args(args)
