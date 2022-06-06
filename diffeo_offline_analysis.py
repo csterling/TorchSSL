@@ -37,6 +37,7 @@ def diffeo_offline_analysis(
     ]
 
     args = parse_args(args)
+    args.distributed = False
 
     model, loader_dict, _, __ = create_model(args.gpu, 1, args)
 
