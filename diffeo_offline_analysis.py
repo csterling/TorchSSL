@@ -40,12 +40,7 @@ def diffeo_offline_analysis(
 
     model, loader_dict, _, __ = create_model(0, 1, args)
 
-    d, g = calculate_diffeo_d_g(model.model, loader_dict['eval'], gpu)
-
-    print(
-        f"D = {d}\n"
-        f"G = {g}"
-    )
+    return calculate_diffeo_d_g(model.model, loader_dict['eval'], gpu)
 
 
 def main(args=None):
@@ -105,7 +100,7 @@ def main(args=None):
 
     parsed = parser.parse_args(args=args)
 
-    diffeo_offline_analysis(
+    d, g = diffeo_offline_analysis(
         parsed.dataset,
         parsed.num_classes,
         parsed.net,
@@ -114,6 +109,11 @@ def main(args=None):
         parsed.amount_labelled,
         parsed.epoch,
         parsed.gpu
+    )
+
+    print(
+        f"D = {d}\n"
+        f"G = {g}"
     )
 
 
