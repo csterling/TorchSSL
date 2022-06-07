@@ -32,16 +32,15 @@ def diffeo_offline_analysis(
         "--retain-epochs", "50", "100", "500", "1000",
         "--num_labels", str(amount_labelled),
         "--num_classes", str(num_classes),
-        "--multiprocessing-distributed", "false",
-        "--gpu", str(gpu)
+        "--only-gpus", str(gpu)
     ]
 
     args = parse_args(args)
-    args.distributed = False
+    args.distributed = True
 
-    model, loader_dict, _, __ = create_model(args.gpu, 1, args)
+    model, loader_dict, _, __ = create_model(0, 1, args)
 
-    d, g = calculate_diffeo_d_g(model.model, loader_dict['eval'], args.gpu)
+    d, g = calculate_diffeo_d_g(model.model, loader_dict['eval'], gpu)
 
     print(
         f"D = {d}\n"
