@@ -81,9 +81,9 @@ def main(args=None):
                                 top1 = calc_top1(model.model, loader_dict['eval'], parsed.gpu)
                                 d, g = calculate_diffeo_d_g(model.model, loader_dict['eval'], parsed.gpu)
                                 e, r, r_coeff = stats(d, g, top1)
-                            except Exception as e:
+                            except Exception as exc:
                                 e = d = g = r = ""
-                                r_coeff = str(e)
+                                r_coeff = str(exc)
                             print(f"{dataset},{net},{ssl_method},{pretraining},-1,{epoch},{e},{d},{g},{r},{r_coeff}")
 
                         for amount_labelled in amount_labelled_setting:
@@ -101,9 +101,9 @@ def main(args=None):
                                 top1 = calc_top1(model.model, loader_dict['eval'], parsed.gpu)
                                 d, g = calculate_diffeo_d_g(model.model, loader_dict['eval'], parsed.gpu)
                                 e, r, r_coeff = stats(d, g, top1)
-                            except Exception as e:
+                            except Exception as exc:
                                 e = d = g = r = ""
-                                r_coeff = str(e)
+                                r_coeff = str(exc)
                             print(f"{dataset},{net},{ssl_method},{pretraining},{amount_labelled},{epoch},{e},{d},{g},{r},{r_coeff}")
 
 
