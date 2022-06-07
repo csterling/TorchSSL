@@ -1,7 +1,35 @@
 import argparse
+import math
 import traceback
 
-from diffeo_offline_analysis import diffeo_offline_analysis
+from diffeo_offline_analysis import load_model_and_eval_loader
+from diffeo.eval import calculate_diffeo_d_g
+
+from sklearn.metrics import accuracy_score
+import torch
+
+
+def calc_top1(model, eval_loader, gpu):
+    y_true = []
+    y_pred = []
+    for _, x, y in eval_loader:
+        x, y = x.cuda(gpu), y.cuda(gpu)
+        logits = model(x)
+        y_true.extend(y.cpu().tolist())
+        y_pred.extend(torch.max(logits, dim=-1)[1].cpu().tolist())
+    return accuracy_score(y_true, y_pred)
+
+
+def stats(d, g, top1):
+    e = 1.0 - top1
+    try:
+        r = d / g
+    except ZeroDivisionError:
+        r = 0.0
+
+    r_coeff = e / math.sqrt(r)
+
+    return e, r, r_coeff
 
 
 def main(args=None):
@@ -29,7 +57,7 @@ def main(args=None):
         "custom_birds_0.0_1.0": (10061, 200, (1000, 3000, 8000))
     }
     EPOCHS = (50, 100, 500, 1000)
-    print("dataset,net,ssl_method,pretraining,amount_labelled,epoch,d,g")
+    print("dataset,net,ssl_method,pretraining,amount_labelled,epoch,error,D,G,R,R_coeff")
 
     for dataset in DATASETS_SETTING.keys():
         dataset_size, num_classes, amount_labelled_setting = DATASETS_SETTING[dataset]
@@ -40,7 +68,7 @@ def main(args=None):
                         # Run the fully-supervised method on the entire dataset as well
                         if ssl_method == "fullysupervised":
                             try:
-                                d, g = diffeo_offline_analysis(
+                                model, loader_dict = load_model_and_eval_loader(
                                     dataset,
                                     num_classes,
                                     net,
@@ -50,14 +78,17 @@ def main(args=None):
                                     epoch,
                                     parsed.gpu
                                 )
+                                top1 = calc_top1(model.model, loader_dict['eval'], parsed.gpu)
+                                d, g = calculate_diffeo_d_g(model.model, loader_dict['eval'], parsed.gpu)
+                                e, r, r_coeff = stats(d, g, top1)
                             except Exception as e:
-                                d = ""
-                                g = str(e)
-                            print(f"{dataset},{net},{ssl_method},{pretraining},-1,{epoch},{d},{g}")
+                                e = d = g = r = ""
+                                r_coeff = str(e)
+                            print(f"{dataset},{net},{ssl_method},{pretraining},-1,{epoch},{e},{d},{g},{r},{r_coeff}")
 
                         for amount_labelled in amount_labelled_setting:
                             try:
-                                d, g = diffeo_offline_analysis(
+                                model, loader_dict = load_model_and_eval_loader(
                                     dataset,
                                     num_classes,
                                     net,
@@ -67,10 +98,13 @@ def main(args=None):
                                     epoch,
                                     parsed.gpu
                                 )
+                                top1 = calc_top1(model.model, loader_dict['eval'], parsed.gpu)
+                                d, g = calculate_diffeo_d_g(model.model, loader_dict['eval'], parsed.gpu)
+                                e, r, r_coeff = stats(d, g, top1)
                             except Exception as e:
-                                d = ""
-                                g = str(e)
-                            print(f"{dataset},{net},{ssl_method},{pretraining},{amount_labelled},{epoch},{d},{g}")
+                                e = d = g = r = ""
+                                r_coeff = str(e)
+                            print(f"{dataset},{net},{ssl_method},{pretraining},{amount_labelled},{epoch},{e},{d},{g},{r},{r_coeff}")
 
 
 def sys_main() -> int:

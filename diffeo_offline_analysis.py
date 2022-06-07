@@ -5,7 +5,7 @@ import traceback
 from diffeo.eval import calculate_diffeo_d_g
 
 
-def diffeo_offline_analysis(
+def load_model_and_eval_loader(
         dataset,
         num_classes,
         net,
@@ -39,6 +39,30 @@ def diffeo_offline_analysis(
     args.distributed = True
 
     model, loader_dict, _, __ = create_model(0, 1, args)
+
+    return model, loader_dict
+
+
+def diffeo_offline_analysis(
+        dataset,
+        num_classes,
+        net,
+        ssl_method,
+        pretraining,
+        amount_labelled,
+        epoch,
+        gpu
+):
+    model, loader_dict = load_model_and_eval_loader(
+        dataset,
+        num_classes,
+        net,
+        ssl_method,
+        pretraining,
+        amount_labelled,
+        epoch,
+        gpu
+    )
 
     return calculate_diffeo_d_g(model.model, loader_dict['eval'], gpu)
 
