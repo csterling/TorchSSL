@@ -67,11 +67,7 @@ def main(args):
         main_worker(args.gpu, ngpus_per_node, args)
 
 
-def main_worker(gpu, ngpus_per_node, args):
-    '''
-    main_worker is conducted on each GPU.
-    '''
-
+def create_model(gpu, ngpus_per_node, args):
     global best_acc1
     if args.multiprocessing_distributed:
         if args.only_gpus is not None and len(args.only_gpus) > 0:
@@ -127,15 +123,15 @@ def main_worker(gpu, ngpus_per_node, args):
                                    )
 
     model = FlexMatch(_net_builder,
-                     args.num_classes,
-                     args.ema_m,
-                     args.T,
-                     args.p_cutoff,
-                     args.ulb_loss_ratio,
-                     args.hard_label,
-                     num_eval_iter=args.num_eval_iter,
-                     tb_log=tb_log,
-                     logger=logger)
+                      args.num_classes,
+                      args.ema_m,
+                      args.T,
+                      args.p_cutoff,
+                      args.ulb_loss_ratio,
+                      args.hard_label,
+                      num_eval_iter=args.num_eval_iter,
+                      tb_log=tb_log,
+                      logger=logger)
 
     logger.info(f'Number of Trainable Params: {count_parameters(model.model)}')
 
@@ -186,14 +182,14 @@ def main_worker(gpu, ngpus_per_node, args):
     cudnn.benchmark = True
     if args.rank != 0:
         torch.distributed.barrier()
- 
+
     # Construct Dataset & DataLoader
     if args.dataset.lower() != "imagenet":
         train_dset = SSL_Dataset(args, alg='flexmatch', name=args.dataset, train=True,
-                                num_classes=args.num_classes, data_dir=args.data_dir)
+                                 num_classes=args.num_classes, data_dir=args.data_dir)
         lb_dset, ulb_dset = train_dset.get_ssl_dset(args.num_labels)
         _eval_dset = SSL_Dataset(args, alg='flexmatch', name=args.dataset, train=False,
-                                num_classes=args.num_classes, data_dir=args.data_dir)
+                                 num_classes=args.num_classes, data_dir=args.data_dir)
         eval_dset = _eval_dset.get_dset()
     else:
         image_loader = ImageNetLoader(root_path=args.data_dir, num_labels=args.num_labels,
@@ -203,8 +199,8 @@ def main_worker(gpu, ngpus_per_node, args):
         eval_dset = image_loader.get_lb_test_data()
     if args.rank == 0:
         torch.distributed.barrier()
- 
-    
+
+
     loader_dict = {}
     dset_dict = {'train_lb': lb_dset, 'train_ulb': ulb_dset, 'eval': eval_dset}
 
@@ -236,6 +232,15 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.resume:
         model.load_model(args.load_path)
 
+    return model, loader_dict, save_path, logger
+
+
+def main_worker(gpu, ngpus_per_node, args):
+    '''
+    main_worker is conducted on each GPU.
+    '''
+    model, loader_dict, save_path, logger = create_model(gpu, ngpus_per_node, args)
+
     # START TRAINING of flexmatch
     trainer = model.train
     for epoch in range(args.epoch):
@@ -259,7 +264,7 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-def sys_main(args=None):
+def parse_args(args):
     parser = argparse.ArgumentParser(description='')
 
     '''
@@ -357,7 +362,12 @@ def sys_main(args=None):
 
     args = parser.parse_args(args)
     over_write_args_from_file(args, args.c)
-    main(args)
+
+    return args
+
+
+def sys_main(args=None):
+    main(parse_args(args))
 
 
 if __name__ == "__main__":
