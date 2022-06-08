@@ -1,5 +1,6 @@
 import argparse
 import math
+import multiprocessing
 import traceback
 
 from diffeo_offline_analysis import load_model_and_eval_loader
@@ -7,6 +8,8 @@ from diffeo.eval import calculate_diffeo_d_g
 
 from sklearn.metrics import accuracy_score
 import torch
+
+multiprocessing.set_start_method("spawn")
 
 
 def calc_top1(model, eval_loader, gpu):
@@ -30,6 +33,36 @@ def stats(d, g, top1):
     r_coeff = e / math.sqrt(r)
 
     return e, r, r_coeff
+
+
+def main_worker(
+        dataset,
+        num_classes,
+        net,
+        ssl_method,
+        pretraining,
+        amount_labelled,
+        epoch,
+        gpu
+):
+    try:
+        model, loader_dict = load_model_and_eval_loader(
+            dataset,
+            num_classes,
+            net,
+            ssl_method,
+            pretraining,
+            amount_labelled,
+            epoch,
+            gpu
+        )
+        top1 = calc_top1(model.model, loader_dict['eval'], gpu)
+        d, g = calculate_diffeo_d_g(model.model, loader_dict['eval'], gpu)
+        e, r, r_coeff = stats(d, g, top1)
+    except Exception as exc:
+        e = d = g = r = ""
+        r_coeff = str(exc)
+    print(f"{dataset},{net},{ssl_method},{pretraining},{amount_labelled},{epoch},{e},{d},{g},{r},{r_coeff}")
 
 
 def main(args=None):
@@ -67,44 +100,32 @@ def main(args=None):
                     for epoch in EPOCHS:
                         # Run the fully-supervised method on the entire dataset as well
                         if ssl_method == "fullysupervised":
-                            try:
-                                model, loader_dict = load_model_and_eval_loader(
-                                    dataset,
-                                    num_classes,
-                                    net,
-                                    ssl_method,
-                                    pretraining,
-                                    -1,
-                                    epoch,
-                                    parsed.gpu
-                                )
-                                top1 = calc_top1(model.model, loader_dict['eval'], parsed.gpu)
-                                d, g = calculate_diffeo_d_g(model.model, loader_dict['eval'], parsed.gpu)
-                                e, r, r_coeff = stats(d, g, top1)
-                            except Exception as exc:
-                                e = d = g = r = ""
-                                r_coeff = str(exc)
-                            print(f"{dataset},{net},{ssl_method},{pretraining},-1,{epoch},{e},{d},{g},{r},{r_coeff}")
+                            p = multiprocessing.Process(target=main_worker, args=(
+                                dataset,
+                                num_classes,
+                                net,
+                                ssl_method,
+                                pretraining,
+                                -1,
+                                epoch,
+                                parsed.gpu
+                            ))
+                            p.start()
+                            p.join()
 
                         for amount_labelled in amount_labelled_setting:
-                            try:
-                                model, loader_dict = load_model_and_eval_loader(
-                                    dataset,
-                                    num_classes,
-                                    net,
-                                    ssl_method,
-                                    pretraining,
-                                    amount_labelled,
-                                    epoch,
-                                    parsed.gpu
-                                )
-                                top1 = calc_top1(model.model, loader_dict['eval'], parsed.gpu)
-                                d, g = calculate_diffeo_d_g(model.model, loader_dict['eval'], parsed.gpu)
-                                e, r, r_coeff = stats(d, g, top1)
-                            except Exception as exc:
-                                e = d = g = r = ""
-                                r_coeff = str(exc)
-                            print(f"{dataset},{net},{ssl_method},{pretraining},{amount_labelled},{epoch},{e},{d},{g},{r},{r_coeff}")
+                            p = multiprocessing.Process(target=main_worker, args=(
+                                dataset,
+                                num_classes,
+                                net,
+                                ssl_method,
+                                pretraining,
+                                amount_labelled,
+                                epoch,
+                                parsed.gpu
+                            ))
+                            p.start()
+                            p.join()
 
 
 def sys_main() -> int:
