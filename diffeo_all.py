@@ -60,7 +60,9 @@ def main_worker(
     except Exception as exc:
         e = d = g = r = ""
         r_coeff = str(exc)
-    print(f"{dataset},{net},{ssl_method},{pretraining},{amount_labelled},{epoch},{e},{d},{g},{r},{r_coeff}")
+    with open("output.txt", "a") as output_file:
+        output_file.write(f"{dataset},{net},{ssl_method},{pretraining},{amount_labelled},{epoch},{e},{d},{g},{r},{r_coeff}\n")
+    print(f"{dataset},{net},{ssl_method},{pretraining},{amount_labelled},{epoch},{e},{d},{g},{r},{r_coeff}\n")
 
 
 def main(args=None):
