@@ -9,8 +9,6 @@ from diffeo.eval import calculate_diffeo_d_g
 from sklearn.metrics import accuracy_score
 import torch
 
-multiprocessing.set_start_method("spawn")
-
 
 def calc_top1(model, eval_loader, gpu):
     y_true = []
@@ -66,6 +64,7 @@ def main_worker(
 
 
 def main(args=None):
+    multiprocessing.set_start_method("spawn")
     parser = argparse.ArgumentParser(
         prog="diffeo_all",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
