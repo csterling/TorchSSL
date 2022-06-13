@@ -302,7 +302,7 @@ class FlexMatch:
         self.print_fn(f"model saved: {save_filename}")
 
     def load_model(self, load_path):
-        checkpoint = torch.load(load_path)
+        checkpoint = torch.load(load_path, map_location="cuda:0")
 
         self.model.load_state_dict(checkpoint['model'])
         self.ema_model = deepcopy(self.model)

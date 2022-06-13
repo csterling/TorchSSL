@@ -294,13 +294,18 @@ class Uda:
         self.print_fn(f"model saved: {save_filename}")
 
     def load_model(self, load_path):
-        checkpoint = torch.load(load_path)
+        checkpoint = torch.load(load_path, map_location="cuda:0")
 
         self.model.load_state_dict(checkpoint['model'])
         self.optimizer.load_state_dict(checkpoint['optimizer'])
         self.scheduler.load_state_dict(checkpoint['scheduler'])
         self.it = checkpoint['it']
-        self.ema_model.load_state_dict(checkpoint['ema_model'])
+        from collections import OrderedDict
+        new_state_dict = OrderedDict()
+        for k, v in checkpoint['ema_model'].items():
+            name = k[7:] # remove `module.`
+            new_state_dict[name] = v
+        self.ema_model.load_state_dict(new_state_dict)
         self.print_fn('model loaded')
 
     def interleave_offsets(self, batch, nu):
