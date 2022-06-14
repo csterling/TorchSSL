@@ -240,7 +240,12 @@ class FullySupervised:
         self.optimizer.load_state_dict(checkpoint['optimizer'])
         self.scheduler.load_state_dict(checkpoint['scheduler'])
         self.it = checkpoint['it']
-        self.ema_model.load_state_dict(checkpoint['ema_model'])
+        from collections import OrderedDict
+        new_state_dict = OrderedDict()
+        for k, v in checkpoint['ema_model'].items():
+            name = k[7:] # remove `module.`
+            new_state_dict[name] = v
+        self.ema_model.load_state_dict(new_state_dict)
         self.print_fn('model loaded')
 
     # Abandoned in PiModel
