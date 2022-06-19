@@ -295,7 +295,10 @@ class SSL_Dataset:
         """
         # Supervised top line using all data as labeled data.
         if self.alg == 'fullysupervised':
-            lb_data, lb_targets = self.get_data()
+            if self.name.upper() == 'STL10':
+                lb_data, lb_targets, _ = self.get_data()
+            else:
+                lb_data, lb_targets = self.get_data()
             lb_dset = BasicDataset(self.alg, lb_data, lb_targets, self.num_classes,
                                    self.transform, False, None, onehot)
             return lb_dset, None
