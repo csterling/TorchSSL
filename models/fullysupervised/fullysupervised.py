@@ -213,9 +213,7 @@ class FullySupervised:
             'eval/loss': total_loss / total_num, 'eval/top-1-acc': top1, 'eval/top-5-acc': top5
         }
 
-    def save_model(self, save_name, save_path, dont_save_before_1000000=True):
-        if self.it < 1000000 and dont_save_before_1000000:
-            return
+    def save_model(self, save_name, save_path):
         save_filename = os.path.join(save_path, save_name)
         # copy EMA parameters to ema_model for saving with model as temp
         self.model.eval()
